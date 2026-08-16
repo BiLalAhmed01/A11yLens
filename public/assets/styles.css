@@ -188,11 +188,9 @@ input:focus-visible,
   color: var(--text);
 }
 .brand:hover { color: var(--text); }
-.brand-dot {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--secondary), var(--primary) 70%);
-  box-shadow: 0 0 14px var(--primary);
+.brand-logo {
+  width: 28px; height: 28px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .nav-right {
