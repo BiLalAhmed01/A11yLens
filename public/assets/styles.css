@@ -189,7 +189,7 @@ input:focus-visible,
 }
 .brand:hover { color: var(--text); }
 .brand-logo {
-  width: 28px; height: 28px;
+  width: 34px; height: 34px;
   object-fit: contain;
   flex-shrink: 0;
 }
