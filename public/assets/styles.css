@@ -1,0 +1,269 @@
+/* ==========================================================================
+   A11yLens design tokens
+   ========================================================================== */
+:root {
+  --bg: #07111F;
+  --surface: #0D1B2A;
+  --surface-raised: #122236;
+  --primary: #18D6B5;
+  --secondary: #5EEAD4;
+  --text: #F5F7FA;
+  --muted: #94A3B8;
+  --border: #203247;
+  --warning: #F5B942;
+  --critical: #FF6B6B;
+  --success: #22C55E;
+
+  --font-heading: 'Sora', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --shadow-glow: 0 0 24px rgba(24, 214, 181, 0.25);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; }
+
+/* The `hidden` attribute loses to any author rule that sets `display` at
+   equal specificity (e.g. `.scan-meta { display: flex }`), so it silently
+   stops hiding anything the moment a component needs flex/grid. Force it
+   to always win. */
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 var(--space-3);
+}
+
+p { margin: 0 0 var(--space-4); color: var(--muted); }
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover { color: var(--secondary); }
+
+img, svg { max-width: 100%; display: block; }
+
+/* Visible focus ring for every interactive element -- never remove this. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 var(--space-5);
+}
+
+@media (max-width: 640px) {
+  .container { padding: 0 var(--space-4); }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: -60px;
+  background: var(--primary);
+  color: var(--bg);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  z-index: 1000;
+  transition: top 0.2s var(--ease);
+}
+.skip-link:focus { top: var(--space-4); }
+
+/* ---- Buttons ------------------------------------------------------------ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 150ms var(--ease), box-shadow 150ms var(--ease), background 150ms var(--ease), border-color 150ms var(--ease);
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #052420;
+  box-shadow: var(--shadow-glow);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: 0 0 32px rgba(24, 214, 181, 0.4); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-ghost:hover { border-color: var(--primary); color: var(--secondary); }
+
+.btn-block { width: 100%; }
+
+/* ---- Nav ------------------------------------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7, 17, 31, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+}
+.brand:hover { color: var(--text); }
+.brand-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--secondary), var(--primary) 70%);
+  box-shadow: 0 0 14px var(--primary);
+  flex-shrink: 0;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.nav-links a {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-actions { display: flex; align-items: center; gap: var(--space-3); }
+
+.nav-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 44px; height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .nav-links, .nav-actions .btn-ghost { display: none; }
+  .nav-toggle { display: inline-flex; }
+}
+
+/* ---- Badges / pills ---------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.badge-critical { background: rgba(255,107,107,0.12); color: var(--critical); border-color: rgba(255,107,107,0.35); }
+.badge-warning  { background: rgba(245,185,66,0.12); color: var(--warning); border-color: rgba(245,185,66,0.35); }
+.badge-success  { background: rgba(34,197,94,0.12); color: var(--success); border-color: rgba(34,197,94,0.35); }
+.badge-neutral  { background: var(--bg); color: var(--muted); border-color: var(--border); }
+
+/* ---- Cards -------------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* ---- Icon ---------------------------------------------------------------
+   Hand-drawn duotone SVG icon shells: a soft glowing disc behind a line-art
+   glyph, standing in for the brief's "real 3D icon" direction without a
+   binary asset pipeline -- gives depth via gradient + glow instead of flat
+   single-color icons. */
+.icon-tile {
+  width: 56px; height: 56px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 30% 25%, rgba(94,234,212,0.35), rgba(24,214,181,0.08) 70%);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.icon-tile svg { width: 28px; height: 28px; }
