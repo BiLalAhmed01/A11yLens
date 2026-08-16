@@ -31,10 +31,8 @@ export async function discoverPages(page, startUrl, maxPages = 5) {
     if (new URL(landed).origin !== origin) continue;
 
     const landedKey = normalize(landed);
-    if (landedKey !== url) {
-      if (seen.has(landedKey)) continue;
-      seen.add(landedKey);
-    }
+    if (landedKey !== url && seen.has(landedKey)) continue; // redirected onto a page we already have
+    seen.add(landedKey);
     discovered.push(landed);
 
     if (discovered.length >= maxPages) break;

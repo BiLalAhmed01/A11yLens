@@ -147,5 +147,12 @@ src/
 - The crawler only follows same-origin `<a href>` links reachable without
   authentication; it won't discover pages behind logins or JS-only
   routing that doesn't update visible links.
+- Point it at sites you trust enough to open in your own browser. Only
+  same-origin pages are ever scanned or included in the report, but a
+  target that redirects off-origin still causes one request to that
+  destination before the crawler drops the page — the same thing that
+  happens if you click the link yourself. That request comes from your
+  machine, so avoid scanning untrusted sites from inside a network where
+  a stray GET to an internal address would matter.
 - The 0–100 score is a heuristic weighted by axe impact severity, not a
   certified metric from any standards body.

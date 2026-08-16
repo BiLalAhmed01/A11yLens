@@ -42,11 +42,16 @@ function parseArgs(argv) {
   return args;
 }
 
-/** Accepts "example.com" or a full URL; rejects anything that isn't http(s). */
+/**
+ * Accepts "example.com" or a full URL; rejects anything that isn't http(s).
+ * A scheme is only recognized when followed by "//", so "localhost:3000"
+ * is treated as a host:port and not as a "localhost:" scheme.
+ */
 function parseSiteUrl(input) {
+  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(input);
   let url;
   try {
-    url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(input) ? input : `https://${input}`);
+    url = new URL(hasScheme ? input : `https://${input}`);
   } catch {
     throw new UsageError(`Not a valid URL: ${input}`);
   }
@@ -73,12 +78,11 @@ async function main() {
 
   const browser = await chromium.launch();
   let scans;
-  let urls;
   try {
     const page = await browser.newPage();
 
     console.log("Discovering pages...");
-    urls = await discoverPages(page, siteUrl, args.maxPages);
+    const urls = await discoverPages(page, siteUrl, args.maxPages);
     if (!urls.length) {
       console.error(`Could not load ${siteUrl} — check the URL is reachable and try again.`);
       process.exitCode = 1;

@@ -104,14 +104,16 @@ ${JSON.stringify(violationsForPrompt, null, 2)}
 --- END UNTRUSTED VIOLATION DATA ---`;
 
   const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: RESPONSE_SCHEMA,
-    },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: RESPONSE_SCHEMA,
+      },
+    })
+  );
 
   // response.text is undefined when the model is cut off by a safety filter or
   // the token limit; JSON.parse would otherwise throw a confusing TypeError.
@@ -120,6 +122,25 @@ ${JSON.stringify(violationsForPrompt, null, 2)}
   const parsed = JSON.parse(response.text);
   if (!Array.isArray(parsed?.issues)) throw new Error("model response had no issues array");
   return parsed;
+}
+
+/**
+ * Retries rate-limit (429) and overloaded (503) responses, which Gemini's
+ * free tier returns routinely. Everything before this call — a full crawl and
+ * scan — is expensive to redo, so a transient blip shouldn't cost the report.
+ */
+async function withRetry(call, attempts = 3) {
+  for (let i = 1; ; i++) {
+    try {
+      return await call();
+    } catch (err) {
+      const transient = /\b(429|503)\b/.test(err.message ?? "");
+      if (!transient || i >= attempts) throw err;
+      const delayMs = 2000 * i;
+      console.warn(`  Gemini busy, retrying in ${delayMs / 1000}s...`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 /**
