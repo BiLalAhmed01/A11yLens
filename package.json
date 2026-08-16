@@ -1,0 +1,20 @@
+{
+  "name": "a11ylens",
+  "version": "1.0.0",
+  "description": "AI Accessibility and Performance Auditor for Small Business Websites",
+  "type": "module",
+  "bin": {
+    "a11ylens": "src/index.js"
+  },
+  "scripts": {
+    "scan": "node src/index.js",
+    "postinstall": "playwright install chromium"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^0.15.0",
+    "axe-core": "^4.10.2",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.48.2"
+  }
+}
