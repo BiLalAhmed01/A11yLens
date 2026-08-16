@@ -11,11 +11,11 @@ const COLORS = {
   success: "#22C55E",
 };
 
-const PRIORITY_COLOR = {
-  Critical: COLORS.critical,
-  Serious: COLORS.warning,
-  Warning: COLORS.warning,
-};
+const PRIORITY_COLOR = new Map([
+  ["Critical", COLORS.critical],
+  ["Serious", COLORS.warning],
+  ["Warning", COLORS.warning],
+]);
 
 function scoreLabel(score) {
   if (score >= 90) return "Excellent";
@@ -24,15 +24,34 @@ function scoreLabel(score) {
   return "Critical";
 }
 
+/**
+ * Escapes for both text and quoted-attribute contexts. Everything rendered
+ * here — page URLs, markup samples copied off the audited site, LLM prose —
+ * is untrusted, so quotes must be escaped too or a sample containing
+ * `" onload="` would break out of an attribute.
+ */
 function esc(str = "") {
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Only http(s) links are emitted, so a bad value can't become `javascript:`. */
+function safeHref(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:" ? u.href : null;
+  } catch {
+    return null;
+  }
 }
 
 function issueCard(issue) {
-  const color = PRIORITY_COLOR[issue.priority] ?? COLORS.warning;
+  const color = PRIORITY_COLOR.get(issue.priority) ?? COLORS.warning;
+  const helpHref = safeHref(issue.helpUrl);
   return `
   <article class="issue-card" style="border-left-color:${color}">
     <header class="issue-header">
@@ -64,7 +83,7 @@ function issueCard(issue) {
       <span>Pages: ${esc(issue.affectedPages.slice(0, 4).join(", "))}${
         issue.affectedPages.length > 4 ? ` +${issue.affectedPages.length - 4} more` : ""
       }</span>
-      ${issue.helpUrl ? `<a href="${esc(issue.helpUrl)}" target="_blank" rel="noopener">WCAG reference &rarr;</a>` : ""}
+      ${helpHref ? `<a href="${esc(helpHref)}" target="_blank" rel="noopener noreferrer">WCAG reference &rarr;</a>` : ""}
     </footer>
   </article>`;
 }
@@ -175,7 +194,11 @@ export function renderReportHtml({ siteUrl, score, passedCount, issues, summary,
 
     <section class="issues">
       <h2>Prioritized Fix List</h2>
-      ${issues.map(issueCard).join("\n")}
+      ${
+        issues.length
+          ? issues.map(issueCard).join("\n")
+          : `<p class="summary-box">No automated violations were detected on the pages scanned.</p>`
+      }
     </section>
 
     <footer class="report-footer">

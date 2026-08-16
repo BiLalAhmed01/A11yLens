@@ -1,55 +1,71 @@
+const SKIP_EXTENSIONS = /\.(pdf|jpe?g|png|gif|webp|svg|ico|zip|gz|mp4|mp3|docx?|xlsx?|pptx?)$/i;
+
 /**
  * Same-origin link crawler. Uses an existing Playwright page to discover
- * up to `maxPages` internal URLs starting from `startUrl` (BFS, depth-first
- * enough for small marketing sites).
+ * up to `maxPages` internal URLs starting from `startUrl` (breadth-first).
  */
 export async function discoverPages(page, startUrl, maxPages = 5) {
-  const start = new URL(startUrl);
-  const origin = start.origin;
-  const visited = new Set();
-  const queue = [start.href];
+  const origin = new URL(startUrl).origin;
+  const seen = new Set();
+  const queue = [normalize(startUrl)];
   const discovered = [];
+
+  seen.add(queue[0]);
 
   while (queue.length && discovered.length < maxPages) {
     const url = queue.shift();
-    const normalized = normalize(url);
-    if (visited.has(normalized)) continue;
-    visited.add(normalized);
 
     try {
-      await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+      // "load" rather than "networkidle": sites with analytics beacons or
+      // polling never go idle, and a timeout here would drop a good page.
+      await page.goto(url, { waitUntil: "load", timeout: 30000 });
+      await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
     } catch {
       continue; // dead link / timeout — skip, don't crash the whole audit
     }
 
-    discovered.push(page.url());
+    // goto follows redirects, which can land off-origin (e.g. a link shortener
+    // or an open redirect pointing at an internal host). Never scan what we
+    // didn't agree to scan.
+    const landed = page.url();
+    if (new URL(landed).origin !== origin) continue;
+
+    const landedKey = normalize(landed);
+    if (landedKey !== url) {
+      if (seen.has(landedKey)) continue;
+      seen.add(landedKey);
+    }
+    discovered.push(landed);
 
     if (discovered.length >= maxPages) break;
 
-    const links = await page.$$eval("a[href]", (as) =>
-      as.map((a) => a.getAttribute("href")).filter(Boolean)
-    );
+    let links;
+    try {
+      links = await page.$$eval("a[href]", (as) => as.map((a) => a.href));
+    } catch {
+      continue; // page navigated away or was torn down mid-evaluation
+    }
 
     for (const href of links) {
-      let abs;
+      let u;
       try {
-        abs = new URL(href, url).href;
+        u = new URL(href, landed);
       } catch {
         continue;
       }
-      const u = new URL(abs);
       if (u.origin !== origin) continue;
-      if (/\.(pdf|jpg|jpeg|png|svg|zip|docx?|xlsx?)$/i.test(u.pathname)) continue;
-      u.hash = "";
-      if (!visited.has(normalize(u.href)) && !queue.includes(u.href)) {
-        queue.push(u.href);
-      }
+      if (SKIP_EXTENSIONS.test(u.pathname)) continue;
+      const key = normalize(u.href);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      queue.push(key);
     }
   }
 
   return discovered;
 }
 
+/** Canonical form for dedupe: no fragment, no trailing slash on subpaths. */
 function normalize(url) {
   const u = new URL(url);
   u.hash = "";

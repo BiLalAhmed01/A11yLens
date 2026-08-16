@@ -19,7 +19,8 @@ export const VIEWPORTS = {
  */
 export async function scanPage(page, url, viewportName) {
   await page.setViewportSize(VIEWPORTS[viewportName]);
-  await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(url, { waitUntil: "load", timeout: 30000 });
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
   await page.evaluate(axeSource);
 
   const axeResults = await page.evaluate(async () => {
@@ -46,10 +47,8 @@ export async function scanPage(page, url, viewportName) {
       : null;
 
     return {
-      domContentLoadedMs: nav ? nav.domContentLoadedEventEnd : null,
       loadEventMs: nav ? nav.loadEventEnd : null,
       transferKb: Math.round(transferBytes / 1024),
-      requestCount: resources.length,
       lcpMs: lcp,
     };
   });
@@ -66,13 +65,17 @@ export async function scanPage(page, url, viewportName) {
 /**
  * Scans a list of URLs across desktop + mobile viewports and merges results.
  */
-export async function scanSite(page, urls, { onProgress } = {}) {
+export async function scanSite(page, urls, { onProgress, onError } = {}) {
   const scans = [];
   for (const url of urls) {
     for (const viewport of Object.keys(VIEWPORTS)) {
       onProgress?.(url, viewport);
-      const result = await scanPage(page, url, viewport);
-      scans.push(result);
+      try {
+        scans.push(await scanPage(page, url, viewport));
+      } catch (err) {
+        // One flaky page shouldn't discard the whole audit.
+        onError?.(url, viewport, err);
+      }
     }
   }
   return scans;
@@ -94,21 +97,29 @@ export function aggregateViolations(scans) {
           description: v.description,
           help: v.help,
           helpUrl: v.helpUrl,
-          tags: v.tags,
-          nodeCount: 0,
+          nodesPerPage: new Map(),
           affectedPages: new Set(),
           sampleHtml: v.nodes[0]?.html ?? "",
-          sampleTarget: v.nodes[0]?.target?.join(" ") ?? "",
         });
       }
       const entry = byRule.get(v.id);
-      entry.nodeCount += v.nodes.length;
+      if (impactRank(v.impact) > impactRank(entry.impact)) entry.impact = v.impact;
+      // Each page is scanned once per viewport; counting the worst viewport
+      // rather than summing avoids reporting every occurrence twice.
+      entry.nodesPerPage.set(
+        scan.url,
+        Math.max(entry.nodesPerPage.get(scan.url) ?? 0, v.nodes.length)
+      );
       entry.affectedPages.add(`${scan.url} (${scan.viewport})`);
     }
   }
 
   return [...byRule.values()]
-    .map((v) => ({ ...v, affectedPages: [...v.affectedPages] }))
+    .map(({ nodesPerPage, affectedPages, ...v }) => ({
+      ...v,
+      nodeCount: [...nodesPerPage.values()].reduce((a, b) => a + b, 0),
+      affectedPages: [...affectedPages],
+    }))
     .sort((a, b) => impactRank(b.impact) - impactRank(a.impact));
 }
 
