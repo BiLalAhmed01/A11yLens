@@ -195,6 +195,11 @@ input:focus-visible,
   box-shadow: 0 0 14px var(--primary);
   flex-shrink: 0;
 }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
 .nav-links {
   display: flex;
   align-items: center;
@@ -223,7 +228,10 @@ input:focus-visible,
 }
 
 @media (max-width: 860px) {
-  .nav-links, .nav-actions .btn-ghost { display: none; }
+  /* Hide the whole <nav> wrapper, not just .nav-links -- an empty flex
+     item still consumes a `gap` slot in .nav-right, leaving a stray extra
+     gap between the CTA button and the hamburger. */
+  .nav-right nav[aria-label="Primary"], .nav-actions .btn-ghost { display: none; }
   .nav-toggle { display: inline-flex; }
 }
 
