@@ -113,6 +113,8 @@
 
   function setLoading(isLoading) {
     scanBtn.disabled = isLoading;
+    urlInput.disabled = isLoading;
+    scanBtn.classList.toggle("is-loading", isLoading);
     scanBtnLabel.textContent = isLoading ? "Scanning…" : "Scan Your Website";
     skeleton.classList.toggle("active", isLoading);
     scanStatus.hidden = !isLoading;
@@ -140,6 +142,10 @@
 
     emptyState.hidden = true;
     results.classList.remove("active");
+    // Otherwise the previous scan's target/timestamp stays visible and
+    // directly contradicts the URL just submitted, while the page is
+    // visibly loading a different one.
+    scanMeta.hidden = true;
     setLoading(true);
 
     // No incremental progress is streamed back from a single fetch, so this
