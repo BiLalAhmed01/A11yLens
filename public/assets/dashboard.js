@@ -164,7 +164,15 @@
       try {
         payload = await response.json();
       } catch {
-        throw new Error("The server sent back something that wasn't valid JSON.");
+        // A non-JSON body on a non-2xx response is what a static host with
+        // no /api/scan backend actually returns (its own default 404/HTML
+        // page, not our server) -- call that out specifically rather than
+        // just saying "invalid JSON" and leaving the real cause a mystery.
+        throw new Error(
+          response.ok
+            ? "The server sent back something that wasn't valid JSON."
+            : `No scan server responded at /api/scan (HTTP ${response.status}). This dashboard needs to be running via "npm run dev:ui" locally, or deployed on a Node host that runs scripts/serve.mjs -- it won't work on a static-only deployment.`
+        );
       }
 
       if (!response.ok) {
