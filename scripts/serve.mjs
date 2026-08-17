@@ -2,6 +2,7 @@ import "dotenv/config";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import { chromium } from "playwright";
 import { runAudit, AuditError } from "../src/pipeline.js";
 import { parseSiteUrl, ValidationError } from "../src/validate.js";
 
@@ -90,6 +91,7 @@ async function handleScan(req, res) {
     const result = await runAudit(siteUrl, {
       maxPages,
       onProgress: (msg) => console.log(`  ${msg}`),
+      launchBrowser: () => chromium.launch(),
     });
     sendJson(res, 200, result);
   } catch (err) {

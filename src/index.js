@@ -66,6 +66,7 @@ async function main() {
     result = await runAudit(siteUrl, {
       maxPages: args.maxPages,
       onProgress: (msg) => console.log(msg),
+      launchBrowser: () => chromium.launch(),
     });
   } catch (err) {
     if (err instanceof AuditError) {

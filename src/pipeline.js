@@ -1,4 +1,3 @@
-import { chromium } from "playwright";
 import { discoverPages } from "./crawler.js";
 import { scanSite, aggregateViolations, computeScore, countPassedRules } from "./scanner.js";
 import { explainViolations } from "./llm.js";
@@ -8,12 +7,21 @@ export class AuditError extends Error {}
 
 /**
  * Runs the full crawl -> scan -> explain pipeline and returns structured
- * results. Shared by the CLI (src/index.js), which renders these into an
- * HTML/PDF report, and the local dev server (scripts/serve.mjs), which
- * returns them as JSON to the dashboard UI.
+ * results. Shared by the CLI (src/index.js) and local dev server
+ * (scripts/serve.mjs), which both launch a real desktop Chromium via the
+ * full "playwright" package, and by the Vercel serverless function
+ * (api/scan.js), which needs a different, serverless-sized Chromium build
+ * (playwright-core + @sparticuz/chromium) instead. launchBrowser is
+ * required rather than defaulted so this module never hardcodes either
+ * choice, and so the full "playwright" package -- irrelevant and oversized
+ * for a serverless bundle -- is never pulled in by a caller that doesn't
+ * import it itself.
  */
-export async function runAudit(siteUrl, { maxPages = 5, onProgress = () => {} } = {}) {
-  const browser = await chromium.launch();
+export async function runAudit(siteUrl, { maxPages = 5, onProgress = () => {}, launchBrowser } = {}) {
+  if (typeof launchBrowser !== "function") {
+    throw new TypeError("runAudit requires a launchBrowser() function that returns a launched Playwright browser");
+  }
+  const browser = await launchBrowser();
   let scans;
   let urls;
   try {

@@ -136,19 +136,52 @@ the exact same crawl/axe-core/Gemini pipeline the CLI uses (`src/pipeline.js`)
 
 ## Deploying the dashboard
 
-A real scan needs a real headless browser, so the dashboard can't run on
-static-only hosting (GitHub Pages, Vercel/Netlify's free static tier, etc.)
-— those don't run a persistent Node process or ship Chromium.
+A real scan needs a real headless browser. There are two working paths:
 
-- **To deploy it for real**, use any regular Node host: Render, Railway,
-  Fly.io, a VPS. Point the start command at `npm run dev:ui`
-  (= `node scripts/serve.mjs`), set `GEMINI_API_KEY` in the host's
-  environment, and let it use the `$PORT` the host assigns — the server
-  already reads `process.env.PORT`.
-- **To deploy only the landing page**, `public/index.html` alone is safe on
-  any static host. Its "Scan your site" button will still lead to the
-  dashboard, whose scan requests will fail with a clear error message
-  unless a real server (as above) is running alongside it.
+### Option A — a regular Node host (simplest, most reliable)
+
+Render, Railway, Fly.io, a VPS. Point the start command at `npm run dev:ui`
+(= `node scripts/serve.mjs`), set `GEMINI_API_KEY` in the host's
+environment, and let it use the `$PORT` the host assigns — the server
+already reads `process.env.PORT`. This uses the full `playwright` package
+and is the same code path as local development, so it's the least likely
+to surprise you.
+
+### Option B — Vercel, as a serverless function
+
+`api/scan.js` implements the same endpoint as a Vercel Node.js Serverless
+Function, using `playwright-core` + [`@sparticuz/chromium`](https://github.com/Sparticuz/chromium)
+(a Chromium build sized for serverless deployment) instead of the full
+`playwright` package, which doesn't fit. To make this work:
+
+1. In the Vercel project's settings, set **Root Directory** back to the
+   repository root (blank/default) — not `public`. The function needs
+   access to `src/` outside that folder; `vercel.json`'s
+   `"outputDirectory": "public"` handles serving the static site correctly
+   once Root Directory is reset.
+2. Add `GEMINI_API_KEY` as a Vercel **Environment Variable** (Project
+   Settings → Environment Variables) — it isn't read from `.env`, which
+   isn't part of the deployment.
+3. `vercel.json` requests `maxDuration: 60` for `api/scan.js`. Vercel's
+   Hobby (free) tier caps function duration well below what a real crawl +
+   axe-core scan + Gemini call needs — this realistically requires a
+   **Pro plan** (or Fluid Compute) to work reliably.
+4. Redeploy after making the above changes.
+
+**Known risk:** `playwright-core` and `@sparticuz/chromium` must be
+version-matched to the same underlying Chromium build to work reliably
+together, and this combination could not be fully tested outside an actual
+Vercel deployment (different OS/architecture than local development). If
+scans fail on Vercel with a 500, check that deployment's function logs
+first — the fix is very likely a version adjustment in `package.json`, not
+a logic bug.
+
+### Static-only (no scan feature)
+
+`public/index.html` alone is safe on any static host with no setup. Its
+"Scan your site" button will still lead to the dashboard, whose scan
+requests will fail with a clear error message unless one of the two
+options above is deployed alongside it.
 
 ## Testing
 
@@ -190,8 +223,11 @@ test/                characterization tests for the above (node --test)
 public/              static marketing landing page + live dashboard UI
   index.html         landing page
   dashboard.html     scan UI -- calls POST /api/scan for a real scan
+  privacy.html, terms.html   legal pages
   assets/            shared styles.css, app.js (nav), dashboard.js (fetch + render), logo/favicon
 scripts/serve.mjs    static file server for public/ + POST /api/scan (npm run dev:ui)
+api/scan.js          POST /api/scan as a Vercel serverless function (playwright-core + @sparticuz/chromium)
+vercel.json          Vercel config: serve public/ as static output, maxDuration for api/scan.js
 ```
 
 ## Current state
@@ -200,14 +236,13 @@ scripts/serve.mjs    static file server for public/ + POST /api/scan (npm run de
 |---|---|
 | CLI (`src/`) | Real. Runs an actual crawl, axe-core scan, and Gemini call against whatever URL you give it. |
 | Landing page (`public/index.html`) | Real, static marketing page. |
-| Dashboard (`public/dashboard.html`) | Real. Runs a genuine scan through `scripts/serve.mjs`'s `POST /api/scan` endpoint, which calls the same `src/pipeline.js` pipeline the CLI uses. |
+| Dashboard (`public/dashboard.html`) | Real. Runs a genuine scan through `POST /api/scan`, backed by either `scripts/serve.mjs` (any Node host) or `api/scan.js` (Vercel serverless function) — both call the same `src/pipeline.js` pipeline the CLI uses. |
 
-The dashboard only works when served by `npm run dev:ui` (or any Node host
-running `scripts/serve.mjs`) — it needs a real backend to launch a headless
-browser and call Gemini. Opened as a bare `file://` page, or deployed as a
-static-only site (e.g. Vercel's free tier), the scan request has nothing to
-talk to and the UI reports that clearly instead of hanging. See
-[Deploying the dashboard](#deploying-the-dashboard) below.
+The dashboard needs one of those two backends actually running to do
+anything. Opened as a bare `file://` page, or deployed as a static-only
+site with neither backend configured, the scan request has nothing to talk
+to and the UI reports that clearly instead of hanging. See
+[Deploying the dashboard](#deploying-the-dashboard) below for both options.
 
 ## Limitations
 
