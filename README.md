@@ -8,6 +8,16 @@ Gemini, and outputs a prioritized, plain-language fix-it report as HTML
 (and optionally PDF) — the kind of report a non-technical business owner
 can actually read and act on.
 
+<p>
+  <img src="docs/landing-hero.png" alt="A11yLens landing page hero section" width="49%" />
+  <img src="docs/dashboard-results.png" alt="A11yLens dashboard showing a completed scan with a prioritized fix list" width="49%" />
+</p>
+
+The dashboard screenshot above is running in **demo mode** (mock data,
+clearly labeled in the UI) — it isn't wired to the real backend yet. See
+[Current state](#current-state) below for what's real versus mocked, and
+[Usage](#usage) for the CLI pipeline that actually performs a scan.
+
 ## The problem this solves
 
 Most small business websites fail basic accessibility checks — missing
@@ -155,6 +165,17 @@ public/              static marketing landing page + demo dashboard UI
   assets/            shared styles.css, app.js (nav), dashboard.js (mock scan logic), logo/favicon
 scripts/serve.mjs    zero-dependency static file server for public/ (npm run dev:ui)
 ```
+
+## Current state
+
+| Piece | Status |
+|---|---|
+| CLI (`src/`) | Real. Runs an actual crawl, axe-core scan, and Gemini call against whatever URL you give it. |
+| Landing page (`public/index.html`) | Real, static marketing page. |
+| Dashboard (`public/dashboard.html`) | **Demo mode.** Renders deterministic mock data seeded from the URL you type -- no live scan runs. Labeled as such directly in the UI. |
+
+Connecting the dashboard to real results means adding a small backend
+endpoint that runs the CLI pipeline and returns its JSON — not done yet.
 
 ## Limitations
 
