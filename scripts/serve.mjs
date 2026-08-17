@@ -18,8 +18,11 @@ const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(req.url.split("?")[0]);
   let filePath = path.join(ROOT, urlPath === "/" ? "/index.html" : urlPath);
 
-  // Prevent escaping the public/ root via ../ traversal.
-  if (!filePath.startsWith(ROOT)) {
+  // Prevent escaping the public/ root via ../ traversal. A bare
+  // startsWith(ROOT) would also wrongly allow a sibling directory whose
+  // name happens to start with "public" (e.g. "public-private"); requiring
+  // the path separator right after ROOT rules that out.
+  if (filePath !== ROOT && !filePath.startsWith(ROOT + path.sep)) {
     res.writeHead(403);
     res.end("Forbidden");
     return;

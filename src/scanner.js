@@ -8,7 +8,7 @@ const axeSource = fs.readFileSync(
   "utf-8"
 );
 
-export const VIEWPORTS = {
+const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
   mobile: { width: 390, height: 844 },
 };
@@ -17,7 +17,7 @@ export const VIEWPORTS = {
  * Runs axe-core plus basic Navigation/Resource Timing performance checks
  * against a single URL at a single viewport.
  */
-export async function scanPage(page, url, viewportName) {
+async function scanPage(page, url, viewportName) {
   await page.setViewportSize(VIEWPORTS[viewportName]);
   await page.goto(url, { waitUntil: "load", timeout: 30000 });
   await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});

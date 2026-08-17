@@ -9,6 +9,14 @@ const EFFORTS = ["Low", "Medium", "High"];
 const MAX_SAMPLE_HTML = 300;
 const MAX_PAGES_IN_PROMPT = 10;
 
+/**
+ * Without this, a stalled connection (not an error -- a hang) would block
+ * the call forever; nothing in withRetry() reacts to that since it only
+ * catches thrown errors. 30s matches the Playwright navigation timeout used
+ * elsewhere in this codebase.
+ */
+const REQUEST_TIMEOUT_MS = 30_000;
+
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -111,6 +119,7 @@ ${JSON.stringify(violationsForPrompt, null, 2)}
       config: {
         responseMimeType: "application/json",
         responseSchema: RESPONSE_SCHEMA,
+        httpOptions: { timeout: REQUEST_TIMEOUT_MS },
       },
     })
   );

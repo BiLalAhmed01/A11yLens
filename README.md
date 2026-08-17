@@ -114,15 +114,26 @@ node src/index.js example.com --out ./my-reports
 
 Output: `reports/<hostname>-report.html` (and `.pdf` with `--pdf`).
 
+## Testing
+
+```bash
+npm test
+```
+
+Runs the characterization tests in `test/` via Node's built-in test runner.
+They cover the pure aggregation/scoring/report-rendering logic, the
+crawler's BFS/dedup/origin rules (against a fake in-memory page, not a real
+browser), and the CLI's argument validation -- no network or browser
+required.
+
 ## What gets checked
 
 - **Accessibility** (axe-core, WCAG 2.0/2.1 A + AA + best practices):
   missing alt text, insufficient color contrast, unlabeled form inputs,
   missing/invalid ARIA, keyboard-trap risks, heading structure, and more.
-- **Performance**: DOMContentLoaded/load timing, Largest Contentful Paint,
-  total transfer size and request count, all captured per page via the
-  browser's Navigation and Resource Timing APIs — no third-party
-  performance API required.
+- **Performance**: page load timing, Largest Contentful Paint, and total
+  transfer size, all captured per page via the browser's Navigation and
+  Resource Timing APIs — no third-party performance API required.
 
 Each scanned page is checked at both a desktop and a mobile viewport,
 since layout- and touch-target-related issues frequently only appear at
@@ -132,11 +143,17 @@ one size.
 
 ```
 src/
-  crawler.js   same-origin BFS page discovery
-  scanner.js   axe-core + performance data collection, aggregation, scoring
-  llm.js       Gemini prompt/response handling for the plain-language report
-  report.js    styled HTML report renderer
-  index.js     CLI entry point orchestrating the pipeline
+  crawler.js         same-origin BFS page discovery
+  scanner.js         axe-core + performance data collection, aggregation, scoring
+  llm.js             Gemini prompt/response handling for the plain-language report
+  report.js          styled HTML report renderer
+  index.js           CLI entry point orchestrating the pipeline
+test/                characterization tests for the above (node --test)
+public/              static marketing landing page + demo dashboard UI
+  index.html         landing page
+  dashboard.html     scan UI (renders mock data -- not wired to src/, see its header comment)
+  assets/            shared styles.css, app.js (nav), dashboard.js (mock scan logic), logo/favicon
+scripts/serve.mjs    zero-dependency static file server for public/ (npm run dev:ui)
 ```
 
 ## Limitations

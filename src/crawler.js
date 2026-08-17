@@ -1,4 +1,5 @@
-const SKIP_EXTENSIONS = /\.(pdf|jpe?g|png|gif|webp|svg|ico|zip|gz|mp4|mp3|docx?|xlsx?|pptx?)$/i;
+const SKIP_EXTENSIONS =
+  /\.(pdf|jpe?g|png|gif|webp|svg|ico|zip|gz|mp4|mp3|docx?|xlsx?|pptx?|css|js|mjs|json|xml|txt|woff2?|ttf|eot)$/i;
 
 /**
  * Same-origin link crawler. Uses an existing Playwright page to discover

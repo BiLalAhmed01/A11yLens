@@ -4,7 +4,6 @@
 :root {
   --bg: #07111F;
   --surface: #0D1B2A;
-  --surface-raised: #122236;
   --primary: #18D6B5;
   --secondary: #5EEAD4;
   --text: #F5F7FA;
@@ -17,7 +16,6 @@
   --font-heading: 'Sora', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
 
-  --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
@@ -160,8 +158,6 @@ input:focus-visible,
   border-color: var(--border);
 }
 .btn-ghost:hover { border-color: var(--primary); color: var(--secondary); }
-
-.btn-block { width: 100%; }
 
 /* ---- Nav ------------------------------------------------------------- */
 .nav {

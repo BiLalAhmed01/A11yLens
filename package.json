@@ -9,6 +9,7 @@
   "scripts": {
     "scan": "node src/index.js",
     "dev:ui": "node scripts/serve.mjs",
+    "test": "node --test",
     "postinstall": "playwright install chromium"
   },
   "license": "MIT",
