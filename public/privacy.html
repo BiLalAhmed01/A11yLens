@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Privacy Policy — A11yLens</title>
+<meta name="description" content="A11yLens privacy policy: what data is collected, what isn't, and how the scan feature handles third-party site content." />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/logo.png" alt="" width="34" height="34" />
+      A11yLens
+    </a>
+    <div class="nav-right">
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html#how-it-works">How it works</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </div>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu" id="navToggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobile-menu" aria-label="Mobile" hidden style="border-top:1px solid var(--border)">
+    <ul class="container" style="list-style:none; padding: var(--space-4) var(--space-5); margin:0; display:flex; flex-direction:column; gap:var(--space-4);">
+      <li><a href="index.html#how-it-works">How it works</a></li>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">View on GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+  <div class="container legal-doc">
+    <h1>Privacy Policy</h1>
+    <p class="legal-meta">Last updated: August 17, 2026</p>
+
+    <div class="legal-notice">
+      <p><strong>This is not legal advice.</strong> This policy describes, in plain language and as accurately as the underlying code allows, what this specific website and tool actually do with data. It is not a substitute for review by a qualified lawyer, and it does not certify compliance with any specific law (GDPR, CCPA, or otherwise). If you need a compliance-certified policy for a business use case, have this reviewed by a lawyer in your jurisdiction before relying on it.</p>
+    </div>
+
+    <p>A11yLens is operated by Bilal Ahmed, an individual, not a registered company. This policy covers the A11yLens website and dashboard as hosted at this domain. A11yLens is also open-source software (<a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">MIT licensed</a>); if you download and run it yourself on your own server, this policy does not apply to your deployment — you are the operator, and you are responsible for your own users' privacy.</p>
+
+    <h2>What we don't collect</h2>
+    <ul>
+      <li>No accounts, sign-ups, or passwords.</li>
+      <li>No cookies are set by this site.</li>
+      <li>No analytics, tracking pixels, or advertising scripts of any kind.</li>
+      <li>No payment information — the tool is free.</li>
+    </ul>
+
+    <h2>Third-party requests made by these pages</h2>
+    <p>Every page on this site loads web fonts from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Loading a font this way sends your IP address and browser information to Google as part of that request, independent of anything this site does. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a> for how Google handles that.</p>
+
+    <h2>What happens when you use the scan feature</h2>
+    <p>The dashboard's scan feature only works when connected to a running A11yLens server (see the project's <a href="https://github.com/BiLalAhmed01/A11yLens#running-the-dashboard" target="_blank" rel="noopener noreferrer">README</a> for when that's the case for this deployment). When it is running and you submit a URL to scan:</p>
+    <ul>
+      <li>The URL you type is used to crawl <strong>the website you specify</strong> — not this site, not you personally.</li>
+      <li>Content scraped from that target website (page structure, small HTML snippets flagged by accessibility checks) is sent to Google's Gemini API so it can generate plain-language explanations. That is data about the site you chose to scan, processed by Google under <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Google's Gemini API terms</a>.</li>
+      <li>The scan result is returned directly to your browser in the same request. The server does not write scan results to a database or persistent log — only progress and error messages appear transiently in the server's own console output, which is not collected, transmitted, or stored by us beyond that.</li>
+    </ul>
+    <p>If you run the command-line tool yourself instead of the dashboard, generated reports are written to a <code>reports/</code> folder on your own machine and never leave it unless you send them somewhere yourself.</p>
+    <p><strong>Only scan websites you own or have explicit permission to test.</strong> See the <a href="terms.html">Terms of Service</a> for why.</p>
+
+    <h2>Data retention</h2>
+    <p>We don't hold any persistent store of scan URLs, scan results, or visitor data. There is nothing on our side to retain beyond the lifetime of a single request.</p>
+
+    <h2>Children's privacy</h2>
+    <p>This site is not directed at children, and we don't knowingly collect data from children.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the "Last updated" date at the top of this page will change. Continued use of the site after an update means you accept the revised policy.</p>
+
+    <h2>Governing law</h2>
+    <p>This policy is governed by the laws of Pakistan, without regard to conflict-of-law principles.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:ch.bilal.ahmed595@gmail.com">ch.bilal.ahmed595@gmail.com</a>.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-row">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/logo.png" alt="" width="34" height="34" />
+      A11yLens
+    </a>
+    <ul class="footer-links">
+      <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+      <li><a href="terms.html">Terms</a></li>
+      <li><a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+    <span class="footer-fine">Free &amp; open source · MIT licensed</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

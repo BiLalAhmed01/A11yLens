@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Terms of Service — A11yLens</title>
+<meta name="description" content="A11yLens terms of service: acceptable use, warranty disclaimer, and liability limits for the scanning tool." />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/logo.png" alt="" width="34" height="34" />
+      A11yLens
+    </a>
+    <div class="nav-right">
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html#how-it-works">How it works</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </div>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu" id="navToggle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="mobile-menu" aria-label="Mobile" hidden style="border-top:1px solid var(--border)">
+    <ul class="container" style="list-style:none; padding: var(--space-4) var(--space-5); margin:0; display:flex; flex-direction:column; gap:var(--space-4);">
+      <li><a href="index.html#how-it-works">How it works</a></li>
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">View on GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main">
+  <div class="container legal-doc">
+    <h1>Terms of Service</h1>
+    <p class="legal-meta">Last updated: August 17, 2026</p>
+
+    <div class="legal-notice">
+      <p><strong>This is not legal advice.</strong> These terms are a plain, good-faith attempt to set reasonable expectations for a free, individually-operated, open-source tool — not a lawyer-drafted contract. If you plan to rely on this tool for compliance, business, or high-stakes purposes, have your own counsel review these terms and the tool's actual output first.</p>
+    </div>
+
+    <p>These terms govern your use of the A11yLens website and dashboard (this domain) and, where applicable, the A11yLens command-line tool. A11yLens is operated by Bilal Ahmed, an individual. By using this site or the tool, you agree to these terms.</p>
+
+    <h2>What A11yLens is</h2>
+    <p>A11yLens is a free, open-source (<a href="https://github.com/BiLalAhmed01/A11yLens/blob/develop/LICENSE" target="_blank" rel="noopener noreferrer">MIT licensed</a>) tool that scans a website you provide for accessibility (WCAG) and performance issues using axe-core, and uses Google's Gemini API to generate plain-language explanations of the findings. It is provided as-is, described further in the <a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">project README</a>.</p>
+
+    <h2>Only scan sites you're authorized to scan</h2>
+    <p>You are solely responsible for having the right to scan any URL you submit. A11yLens's crawler makes real HTTP requests to the target site from wherever the tool is running, the same as opening the site in a browser. Do not use this tool against a website you don't own, don't operate, and don't have explicit permission to test. You agree not to use A11yLens for any unlawful purpose, including unauthorized access or testing of systems you do not control.</p>
+
+    <h2>No warranty</h2>
+    <p>A11yLens is provided <strong>"as is,"</strong> without warranty of any kind, express or implied. In particular:</p>
+    <ul>
+      <li>Automated accessibility scanning is a starting point, not a compliance guarantee. axe-core (the underlying engine) catches an estimated 30–40% of WCAG issues — a full audit still requires manual testing.</li>
+      <li>The 0–100 accessibility score is a heuristic we compute, not a certified metric from any standards body.</li>
+      <li>AI-generated explanations may contain inaccuracies. Verify anything before acting on it for compliance or legal purposes.</li>
+      <li>We do not guarantee this site, the dashboard, or the scan feature will be available, uninterrupted, or error-free.</li>
+    </ul>
+
+    <h2>Third-party services</h2>
+    <p>Using the scan feature sends data about your chosen target site to Google's Gemini API, subject to <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Google's own terms</a>. See the <a href="privacy.html">Privacy Policy</a> for details on what's sent and when.</p>
+
+    <h2>Intellectual property</h2>
+    <p>The A11yLens source code is released under the <a href="https://github.com/BiLalAhmed01/A11yLens/blob/develop/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>. You may use, copy, modify, and self-host it under that license's terms. This website's content and branding otherwise belong to the operator.</p>
+
+    <h2>Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, the operator is not liable for any damages arising from your use of this site or tool — including damages resulting from scan results, downtime, or from your use of the tool against a website you were not authorized to scan. You use A11yLens at your own risk.</p>
+
+    <h2>Changes to these terms</h2>
+    <p>If these terms change, the "Last updated" date above will change. Continued use after an update means you accept the revised terms.</p>
+
+    <h2>Governing law</h2>
+    <p>These terms are governed by the laws of Pakistan, without regard to conflict-of-law principles.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about these terms: <a href="mailto:ch.bilal.ahmed595@gmail.com">ch.bilal.ahmed595@gmail.com</a>.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-row">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="assets/logo.png" alt="" width="34" height="34" />
+      A11yLens
+    </a>
+    <ul class="footer-links">
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="terms.html" aria-current="page">Terms</a></li>
+      <li><a href="https://github.com/BiLalAhmed01/A11yLens" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+    <span class="footer-fine">Free &amp; open source · MIT licensed</span>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
