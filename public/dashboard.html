@@ -13,16 +13,6 @@
 <style>
   main { padding: var(--space-6) 0 var(--space-9); }
 
-  .demo-banner {
-    display: flex; align-items: center; gap: var(--space-3);
-    background: rgba(245,185,66,0.08); border: 1px solid rgba(245,185,66,0.35);
-    border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-5);
-    font-size: 14px; color: var(--text); flex-wrap: wrap;
-  }
-  .demo-banner .badge { flex-shrink: 0; }
-  .demo-banner a { text-decoration: underline; }
-
   .scan-bar {
     display: flex; gap: var(--space-3);
     background: var(--surface); border: 1px solid var(--border);
@@ -168,11 +158,6 @@
   <div class="container">
     <h1 style="font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: var(--space-2);">Scan a website</h1>
     <p style="margin-bottom: var(--space-5);">Enter a URL to get a prioritized accessibility and performance report.</p>
-
-    <div class="demo-banner" role="note">
-      <span class="badge badge-warning">Demo mode</span>
-      <span>This dashboard renders sample data seeded from the URL you type -- it is not running a live scan. For a real scan, run the <a href="https://github.com/BiLalAhmed01/A11yLens#usage" target="_blank" rel="noopener noreferrer">CLI</a> against your own site.</span>
-    </div>
 
     <form class="scan-bar" id="scanForm">
       <label class="visually-hidden" for="urlInput">Website URL to scan</label>

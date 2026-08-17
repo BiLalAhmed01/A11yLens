@@ -4,9 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
-import { discoverPages } from "./crawler.js";
-import { scanSite, aggregateViolations, computeScore, countPassedRules } from "./scanner.js";
-import { explainViolations } from "./llm.js";
+import { runAudit, AuditError } from "./pipeline.js";
+import { parseSiteUrl, ValidationError } from "./validate.js";
 import { renderReportHtml } from "./report.js";
 
 const USAGE = "Usage: a11ylens <url> [--max-pages N] [--out dir] [--pdf]";
@@ -38,27 +37,13 @@ function parseArgs(argv) {
   if (positional.length !== 1) {
     throw new UsageError(positional.length ? "Expected exactly one URL" : "Missing target URL");
   }
-  args.siteUrl = parseSiteUrl(positional[0]);
-  return args;
-}
-
-/**
- * Accepts "example.com" or a full URL; rejects anything that isn't http(s).
- * A scheme is only recognized when followed by "//", so "localhost:3000"
- * is treated as a host:port and not as a "localhost:" scheme.
- */
-function parseSiteUrl(input) {
-  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(input);
-  let url;
   try {
-    url = new URL(hasScheme ? input : `https://${input}`);
-  } catch {
-    throw new UsageError(`Not a valid URL: ${input}`);
+    args.siteUrl = parseSiteUrl(positional[0]);
+  } catch (err) {
+    if (err instanceof ValidationError) throw new UsageError(err.message);
+    throw err;
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new UsageError(`Only http and https URLs can be scanned (got ${url.protocol})`);
-  }
-  return url.href;
+  return args;
 }
 
 async function main() {
@@ -76,54 +61,28 @@ async function main() {
 
   console.log(`\nA11yLens — scanning ${siteUrl}\n`);
 
-  const browser = await chromium.launch();
-  let scans;
+  let result;
   try {
-    const page = await browser.newPage();
-
-    console.log("Discovering pages...");
-    const urls = await discoverPages(page, siteUrl, args.maxPages);
-    if (!urls.length) {
-      console.error(`Could not load ${siteUrl} — check the URL is reachable and try again.`);
+    result = await runAudit(siteUrl, {
+      maxPages: args.maxPages,
+      onProgress: (msg) => console.log(msg),
+    });
+  } catch (err) {
+    if (err instanceof AuditError) {
+      console.error(err.message);
       process.exitCode = 1;
       return;
     }
-    console.log(`  Found ${urls.length} page(s): ${urls.join(", ")}`);
-
-    console.log("Running axe-core + performance checks (desktop + mobile)...");
-    scans = await scanSite(page, urls, {
-      onProgress: (url, viewport) => console.log(`  Scanning ${url} [${viewport}]`),
-      onError: (url, viewport, err) =>
-        console.warn(`  Skipped ${url} [${viewport}]: ${err.message}`),
-    });
-  } finally {
-    await browser.close();
+    throw err;
   }
-
-  if (!scans.length) {
-    console.error("Every page failed to scan — no report generated.");
-    process.exitCode = 1;
-    return;
-  }
-
-  const aggregated = aggregateViolations(scans);
-  const score = computeScore(aggregated);
-  const passedCount = countPassedRules(scans);
-
-  console.log(`\nScore: ${score}/100 — ${aggregated.length} distinct issue types found.`);
-  console.log("Generating plain-language report...");
-
-  const { summary, issues } = await explainViolations(aggregated, { siteUrl, score });
-
-  const perfSummary = summarizePerf(scans);
 
   const html = renderReportHtml({
-    siteUrl,
-    score,
-    passedCount,
-    issues,
-    summary,
-    perfSummary,
+    siteUrl: result.siteUrl,
+    score: result.score,
+    passedCount: result.passedCount,
+    issues: result.issues,
+    summary: result.summary,
+    perfSummary: result.perfSummary,
     scannedAt: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC",
   });
 
@@ -162,22 +121,6 @@ async function renderPdf(htmlPath, pdfPath) {
   } finally {
     await browser.close();
   }
-}
-
-function summarizePerf(scans) {
-  return {
-    avgLoadMs: avg(scans.map((s) => s.perf.loadEventMs)),
-    avgLcpMs: avg(scans.map((s) => s.perf.lcpMs)),
-    avgTransferKb: avg(scans.map((s) => s.perf.transferKb)),
-    pagesScanned: new Set(scans.map((s) => s.url)).size,
-  };
-}
-
-/** Averages the usable samples; 0/null show up when a timing never fired. */
-function avg(values) {
-  const nums = values.filter((n) => typeof n === "number" && n > 0);
-  if (!nums.length) return 0;
-  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
 }
 
 main().catch((err) => {

@@ -1,78 +1,13 @@
 /**
- * Dashboard demo logic. This UI is not yet wired to the live crawler/axe-core/
- * Gemini pipeline in src/ — it renders deterministic mock data seeded from the
- * scanned hostname so the same URL always produces the same-looking report.
- * Swapping in real results means replacing `runMockScan()` with a fetch to a
- * backend that runs src/index.js's pipeline and returns its JSON.
+ * Dashboard logic. Runs a real scan through POST /api/scan, served by
+ * scripts/serve.mjs, which runs the actual crawler/axe-core/Gemini pipeline
+ * in src/pipeline.js. This only works when the page is loaded through that
+ * server (`npm run dev:ui`) -- opened as a bare file:// page, or deployed as
+ * a static site with no backend (e.g. Vercel's free static hosting), the
+ * fetch below has nothing to talk to and startScan() reports that clearly
+ * instead of spinning forever.
  */
 (function () {
-  const ISSUE_POOL = [
-    {
-      rule: "color-contrast",
-      priority: "Critical",
-      effort: "Low",
-      plainLanguage: "Some text doesn't have enough contrast against its background to be read comfortably.",
-      realWorldImpact: "Low-vision and colorblind users, and anyone in bright sunlight, may not be able to read this text at all.",
-      fix: "Increase the contrast ratio to at least 4.5:1 for normal text (3:1 for large text). Darken the text or lighten the background.",
-    },
-    {
-      rule: "label",
-      priority: "Critical",
-      effort: "Low",
-      plainLanguage: "Some form fields don't have a label a screen reader can announce.",
-      realWorldImpact: "Screen reader users hear only \"edit text\" with no idea what to type, and often abandon the form.",
-      fix: "Add a <label for=\"id\"> tied to each input's id, or an aria-label if a visible label isn't appropriate.",
-    },
-    {
-      rule: "image-alt",
-      priority: "Serious",
-      effort: "Low",
-      plainLanguage: "Some images are missing alternative text.",
-      realWorldImpact: "Screen reader users hear the filename or nothing at all, losing any information the image conveyed.",
-      fix: "Add a concise alt attribute describing the image's purpose, or alt=\"\" if it's purely decorative.",
-    },
-    {
-      rule: "landmark-one-main",
-      priority: "Warning",
-      effort: "Low",
-      plainLanguage: "The page doesn't have a designated main content area.",
-      realWorldImpact: "Screen reader users can't jump straight to the primary content and must tab through every element first.",
-      fix: "Wrap the primary content in a <main> element or add role=\"main\" to its container.",
-    },
-    {
-      rule: "keyboard-trap",
-      priority: "Critical",
-      effort: "Medium",
-      plainLanguage: "A widget on the page can be tabbed into but not tabbed back out of.",
-      realWorldImpact: "Keyboard-only users get stuck and may be unable to reach the rest of the page without reloading.",
-      fix: "Ensure every interactive widget's focus trap (if any) has a documented, working exit — typically Escape or Tab cycling back out.",
-    },
-    {
-      rule: "heading-order",
-      priority: "Warning",
-      effort: "Medium",
-      plainLanguage: "Heading levels skip, e.g. jumping from an <h2> straight to an <h4>.",
-      realWorldImpact: "Screen reader users navigate by heading level; skipped levels make the page's structure confusing.",
-      fix: "Adjust heading tags so levels increase by one at a time, reflecting the true content hierarchy.",
-    },
-    {
-      rule: "link-name",
-      priority: "Serious",
-      effort: "Low",
-      plainLanguage: "Some links have no discernible text, such as an icon-only link with no accessible name.",
-      realWorldImpact: "Screen reader users hear \"link\" with no destination information, and can't tell where it goes.",
-      fix: "Add visible text, an aria-label, or an sr-only span describing the link's destination.",
-    },
-    {
-      rule: "region",
-      priority: "Warning",
-      effort: "Medium",
-      plainLanguage: "Some visible content isn't contained within a landmark region like header, nav, main, or footer.",
-      realWorldImpact: "Screen reader users navigating by region may skip over or lose context for this content.",
-      fix: "Wrap top-level content sections in appropriate landmark elements.",
-    },
-  ];
-
   const form = document.getElementById("scanForm");
   const urlInput = document.getElementById("urlInput");
   const scanBtn = document.getElementById("scanBtn");
@@ -90,55 +25,9 @@
   let currentIssues = [];
   let activeFilter = "All";
 
-  // Deterministic pseudo-random so the same hostname always renders the same report.
-  function seededRandom(seed) {
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
-    return function () {
-      h = (Math.imul(h, 1664525) + 1013904223) | 0;
-      return ((h >>> 0) % 1000) / 1000;
-    };
-  }
-
   function normalizeUrl(input) {
     const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(input) ? input : `https://${input}`;
     return new URL(withScheme);
-  }
-
-  function runMockScan(hostname) {
-    const rand = seededRandom(hostname);
-    const count = 3 + Math.floor(rand() * (ISSUE_POOL.length - 3));
-    const shuffled = [...ISSUE_POOL].sort(() => rand() - 0.5).slice(0, count);
-    const issues = shuffled.map((issue, i) => ({
-      ...issue,
-      nodeCount: 1 + Math.floor(rand() * 6),
-      affectedPages: [`https://${hostname}/ (desktop)`, `https://${hostname}/ (mobile)`].slice(0, i % 2 === 0 ? 2 : 1),
-      helpUrl: `https://dequeuniversity.com/rules/axe/4.10/${issue.rule}`,
-    }));
-
-    const critical = issues.filter((i) => i.priority === "Critical").length;
-    const serious = issues.filter((i) => i.priority === "Serious").length;
-    const warnings = issues.filter((i) => i.priority === "Warning").length;
-    const penalty = critical * 10 + serious * 6 + warnings * 2;
-    const score = Math.max(35, Math.min(98, 100 - penalty));
-    const passedCount = 20 + Math.floor(rand() * 25);
-
-    return {
-      score,
-      passedCount,
-      issues,
-      summary: `This site scores ${score} out of 100 in heuristic accessibility. ${
-        critical > 0
-          ? `${critical} critical issue${critical === 1 ? "" : "s"} would block some visitors entirely and should be fixed first.`
-          : "No critical blockers were found, but the issues below still affect real users."
-      } Addressing these reduces legal exposure and makes the site usable for a wider range of customers.`,
-      perf: {
-        avgLoadMs: 400 + Math.floor(rand() * 2200),
-        avgLcpMs: 800 + Math.floor(rand() * 2400),
-        avgTransferKb: 200 + Math.floor(rand() * 1800),
-        pagesScanned: 1 + Math.floor(rand() * 5),
-      },
-    };
   }
 
   function scoreLabel(score) {
@@ -178,7 +67,7 @@
       </div>
       <footer class="issue-footer">
         <span>Pages: ${esc(issue.affectedPages.join(", "))} · ${issue.nodeCount} occurrence${issue.nodeCount === 1 ? "" : "s"}</span>
-        <a href="${esc(issue.helpUrl)}" target="_blank" rel="noopener noreferrer">WCAG reference &rarr;</a>
+        ${issue.helpUrl ? `<a href="${esc(issue.helpUrl)}" target="_blank" rel="noopener noreferrer">WCAG reference &rarr;</a>` : ""}
       </footer>
     </article>`;
   }
@@ -202,10 +91,10 @@
     document.getElementById("statPassed").textContent = String(data.passedCount);
     document.getElementById("summaryText").textContent = data.summary;
 
-    document.getElementById("perfLoad").textContent = `${data.perf.avgLoadMs} ms`;
-    document.getElementById("perfLcp").textContent = `${data.perf.avgLcpMs} ms`;
-    document.getElementById("perfTransfer").textContent = `${data.perf.avgTransferKb} KB`;
-    document.getElementById("perfPages").textContent = String(data.perf.pagesScanned);
+    document.getElementById("perfLoad").textContent = `${data.perfSummary.avgLoadMs} ms`;
+    document.getElementById("perfLcp").textContent = `${data.perfSummary.avgLcpMs} ms`;
+    document.getElementById("perfTransfer").textContent = `${data.perfSummary.avgTransferKb} KB`;
+    document.getElementById("perfPages").textContent = String(data.perfSummary.pagesScanned);
 
     currentIssues = data.issues;
     activeFilter = "All";
@@ -229,18 +118,23 @@
     scanStatus.hidden = !isLoading;
   }
 
-  function startScan(rawUrl) {
+  function showError(message) {
+    setLoading(false);
+    scanStatus.hidden = false;
+    scanStatus.textContent = message;
+    if (!results.classList.contains("active")) emptyState.hidden = false;
+  }
+
+  async function startScan(rawUrl) {
     let url;
     try {
       url = normalizeUrl(rawUrl);
     } catch {
-      scanStatus.hidden = false;
-      scanStatus.textContent = `"${rawUrl}" doesn't look like a valid URL.`;
+      showError(`"${rawUrl}" doesn't look like a valid URL.`);
       return;
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-      scanStatus.hidden = false;
-      scanStatus.textContent = "Only http and https URLs can be scanned.";
+      showError("Only http and https URLs can be scanned.");
       return;
     }
 
@@ -248,21 +142,49 @@
     results.classList.remove("active");
     setLoading(true);
 
-    const steps = ["Discovering pages…", "Running accessibility checks (desktop)…", "Running accessibility checks (mobile)…", "Generating plain-language report…"];
+    // No incremental progress is streamed back from a single fetch, so this
+    // cycles generic step labels purely to signal the page hasn't frozen --
+    // it isn't tracking the real pipeline's actual stage.
+    const steps = ["Discovering pages…", "Running accessibility checks…", "Checking performance…", "Generating plain-language report…"];
     let stepIndex = 0;
     scanStatus.textContent = steps[0];
     const stepTimer = setInterval(() => {
       stepIndex = Math.min(stepIndex + 1, steps.length - 1);
       scanStatus.textContent = steps[stepIndex];
-    }, 550);
+    }, 4000);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: url.href }),
+      });
+
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new Error("The server sent back something that wasn't valid JSON.");
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.error || `Scan failed (HTTP ${response.status}).`);
+      }
+
       clearInterval(stepTimer);
-      const data = runMockScan(url.hostname);
-      renderResults(data, url.hostname);
+      renderResults(payload, url.hostname);
       setLoading(false);
+      scanStatus.hidden = true;
       results.classList.add("active");
-    }, 2200);
+    } catch (err) {
+      clearInterval(stepTimer);
+      const isNetworkFailure = err instanceof TypeError;
+      showError(
+        isNetworkFailure
+          ? "Couldn't reach the scan server. This dashboard needs to be running via \"npm run dev:ui\" locally -- it won't work as a static-only deployment."
+          : err.message
+      );
+    }
   }
 
   form.addEventListener("submit", (e) => {

@@ -13,10 +13,9 @@ can actually read and act on.
   <img src="docs/dashboard-results.png" alt="A11yLens dashboard showing a completed scan with a prioritized fix list" width="49%" />
 </p>
 
-The dashboard screenshot above is running in **demo mode** (mock data,
-clearly labeled in the UI) — it isn't wired to the real backend yet. See
-[Current state](#current-state) below for what's real versus mocked, and
-[Usage](#usage) for the CLI pipeline that actually performs a scan.
+The dashboard screenshot above is from a real scan — the dashboard runs the
+same crawl/axe-core/Gemini pipeline as the CLI (see
+[Running the dashboard](#running-the-dashboard)).
 
 ## The problem this solves
 
@@ -124,6 +123,33 @@ node src/index.js example.com --out ./my-reports
 
 Output: `reports/<hostname>-report.html` (and `.pdf` with `--pdf`).
 
+## Running the dashboard
+
+```bash
+npm run dev:ui
+```
+
+Open http://localhost:3000, type a URL, and click "Scan Your Website." This
+runs a real scan through `scripts/serve.mjs`'s `POST /api/scan` endpoint —
+the exact same crawl/axe-core/Gemini pipeline the CLI uses (`src/pipeline.js`)
+— and renders the results in the browser instead of writing an HTML file.
+
+## Deploying the dashboard
+
+A real scan needs a real headless browser, so the dashboard can't run on
+static-only hosting (GitHub Pages, Vercel/Netlify's free static tier, etc.)
+— those don't run a persistent Node process or ship Chromium.
+
+- **To deploy it for real**, use any regular Node host: Render, Railway,
+  Fly.io, a VPS. Point the start command at `npm run dev:ui`
+  (= `node scripts/serve.mjs`), set `GEMINI_API_KEY` in the host's
+  environment, and let it use the `$PORT` the host assigns — the server
+  already reads `process.env.PORT`.
+- **To deploy only the landing page**, `public/index.html` alone is safe on
+  any static host. Its "Scan your site" button will still lead to the
+  dashboard, whose scan requests will fail with a clear error message
+  unless a real server (as above) is running alongside it.
+
 ## Testing
 
 ```bash
@@ -156,14 +182,16 @@ src/
   crawler.js         same-origin BFS page discovery
   scanner.js         axe-core + performance data collection, aggregation, scoring
   llm.js             Gemini prompt/response handling for the plain-language report
-  report.js          styled HTML report renderer
-  index.js           CLI entry point orchestrating the pipeline
+  validate.js         shared URL validation (CLI args and API requests)
+  pipeline.js         shared crawl -> scan -> explain orchestration (runAudit)
+  report.js          styled HTML report renderer (CLI only)
+  index.js           CLI entry point: args, calls pipeline.js, writes HTML/PDF
 test/                characterization tests for the above (node --test)
-public/              static marketing landing page + demo dashboard UI
+public/              static marketing landing page + live dashboard UI
   index.html         landing page
-  dashboard.html     scan UI (renders mock data -- not wired to src/, see its header comment)
-  assets/            shared styles.css, app.js (nav), dashboard.js (mock scan logic), logo/favicon
-scripts/serve.mjs    zero-dependency static file server for public/ (npm run dev:ui)
+  dashboard.html     scan UI -- calls POST /api/scan for a real scan
+  assets/            shared styles.css, app.js (nav), dashboard.js (fetch + render), logo/favicon
+scripts/serve.mjs    static file server for public/ + POST /api/scan (npm run dev:ui)
 ```
 
 ## Current state
@@ -172,10 +200,14 @@ scripts/serve.mjs    zero-dependency static file server for public/ (npm run dev
 |---|---|
 | CLI (`src/`) | Real. Runs an actual crawl, axe-core scan, and Gemini call against whatever URL you give it. |
 | Landing page (`public/index.html`) | Real, static marketing page. |
-| Dashboard (`public/dashboard.html`) | **Demo mode.** Renders deterministic mock data seeded from the URL you type -- no live scan runs. Labeled as such directly in the UI. |
+| Dashboard (`public/dashboard.html`) | Real. Runs a genuine scan through `scripts/serve.mjs`'s `POST /api/scan` endpoint, which calls the same `src/pipeline.js` pipeline the CLI uses. |
 
-Connecting the dashboard to real results means adding a small backend
-endpoint that runs the CLI pipeline and returns its JSON — not done yet.
+The dashboard only works when served by `npm run dev:ui` (or any Node host
+running `scripts/serve.mjs`) — it needs a real backend to launch a headless
+browser and call Gemini. Opened as a bare `file://` page, or deployed as a
+static-only site (e.g. Vercel's free tier), the scan request has nothing to
+talk to and the UI reports that clearly instead of hanging. See
+[Deploying the dashboard](#deploying-the-dashboard) below.
 
 ## Limitations
 
